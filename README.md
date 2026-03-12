@@ -1,2 +1,2 @@
 # Engenharia_de_Prompt_e_Aplicacao_AI
-Atividades da disciplina
+Disciplina do curso de Emgenharia de Software
