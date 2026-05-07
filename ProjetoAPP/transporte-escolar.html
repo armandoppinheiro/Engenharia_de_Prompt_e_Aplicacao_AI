@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aplicação web para cálculo de custo de rota de transporte escolar para prefeitura">
+    <meta name="author" content="Prefeitura Municipal">
+    <title>Calculadora de Custos - Transporte Escolar</title>
+    
+    <style>
+        /* ========================================
+           VARIÁVEIS CSS E RESET
+           ======================================== */
+        :root {
+            --cor-primaria: #FFFFC5;
+            --cor-primaria-rgb: 255, 255, 197;
+            --cor-secundaria: #FFD700;
+            --cor-destaque: #FFA500;
+            --cor-sucesso: #4CAF50;
+            --cor-erro: #F44336;
+            --cor-aviso: #FF9800;
+            --cor-texto: #333333;
+            --cor-texto-claro: #666666;
+            --cor-fundo: #FAFAFA;
+            --cor-borda: #E0E0E0;
+            --cor-sombra: rgba(0, 0, 0, 0.1);
+            --fonte-principal: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --espacamento-base: 1rem;
+            --transicao-padrao: all 0.3s ease-in-out;
+            --raio-borda: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: var(--fonte-principal);
+            color: var(--cor-texto);
+            background: linear-gradient(135deg, var(--cor-primaria) 0%, #FFFFF0 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ========================================
+           LAYOUT GERAL
+           ======================================== */
+        header {
+            background: linear-gradient(135deg, #FFD700 0%, var(--cor-primaria) 100%);
+            padding: calc(var(--espacamento-base) * 2);
+            box-shadow: 0 4px 12px var(--cor-sombra);
+            text-align: center;
+            border-bottom: 4px solid #FFA500;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            color: var(--cor-texto);
+            margin-bottom: var(--espacamento-base);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        header p {
+            color: var(--cor-texto-claro);
+            font-size: 0.95rem;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: calc(var(--espacamento-base) * 2) auto;
+            padding: 0 var(--espacamento-base);
+        }
+
+        footer {
+            background-color: var(--cor-texto);
+            color: white;
+            text-align: center;
+            padding: calc(var(--espacamento-base) * 2);
+            margin-top: calc(var(--espacamento-base) * 4);
+            font-size: 0.9rem;
+        }
+
+        /* ========================================
+           FORMULÁRIO
+           ======================================== */
+        .container-form {
+            background: white;
+            border-radius: var(--raio-borda);
+            box-shadow: 0 8px 24px var(--cor-sombra);
+            padding: calc(var(--espacamento-base) * 2);
+            margin-bottom: calc(var(--espacamento-base) * 2);
+        }
+
+        fieldset {
+            border: 2px solid var(--cor-primaria);
+            border-radius: var(--raio-borda);
+            padding: calc(var(--espacamento-base) * 1.5);
+            margin-bottom: var(--espacamento-base);
+            background-color: #FFFEF9;
+        }
+
+        legend {
+            background: linear-gradient(135deg, #FFD700 0%, var(--cor-primaria) 100%);
+            padding: var(--espacamento-base);
+            border-radius: var(--raio-borda);
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--cor-texto);
+            margin-left: -var(--espacamento-base);
+            width: calc(100% + calc(var(--espacamento-base) * 2));
+            box-shadow: 0 2px 8px var(--cor-sombra);
+        }
+
+        .campo-grupo {
+            display: grid;
+            gap: var(--espacamento-base);
+            margin-bottom: var(--espacamento-base);
+        }
+
+        .campo-grupo-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .campo-grupo-3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--cor-texto);
+            font-size: 0.95rem;
+        }
+
+        label span {
+            color: var(--cor-erro);
+            margin-left: 2px;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: var(--espacamento-base);
+            border: 2px solid var(--cor-borda);
+            border-radius: var(--raio-borda);
+            font-family: var(--fonte-principal);
+            font-size: 1rem;
+            transition: var(--transicao-padrao);
+            background-color: white;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--cor-destaque);
+            box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.1);
+            background-color: #FFFEF9;
+        }
+
+        input[type="number"]:invalid,
+        input[type="text"]:invalid {
+            border-color: var(--cor-erro);
+        }
+
+        .info-texto {
+            font-size: 0.85rem;
+            color: var(--cor-texto-claro);
+            margin-top: 0.25rem;
+            font-style: italic;
+        }
+
+        /* ========================================
+           BOTÕES
+           ======================================== */
+        .container-botoes {
+            display: flex;
+            gap: var(--espacamento-base);
+            margin-top: calc(var(--espacamento-base) * 2);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: var(--espacamento-base) calc(var(--espacamento-base) * 2);
+            font-size: 1rem;
+            border: none;
+            border-radius: var(--raio-borda);
+            cursor: pointer;
+            font-weight: bold;
+            transition: var(--transicao-padrao);
+            min-width: 150px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 8px var(--cor-sombra);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px var(--cor-sombra);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-calcular {
+            background: linear-gradient(135deg, #FFD700 0%, var(--cor-destaque) 100%);
+            color: var(--cor-texto);
+        }
+
+        .btn-calcular:hover {
+            background: linear-gradient(135deg, #FFC700 0%, #FF9500 100%);
+        }
+
+        .btn-limpar {
+            background-color: #CCCCCC;
+            color: var(--cor-texto);
+        }
+
+        .btn-limpar:hover {
+            background-color: #B0B0B0;
+        }
+
+        .btn-imprimir {
+            background-color: var(--cor-sucesso);
+            color: white;
+        }
+
+        .btn-imprimir:hover {
+            background-color: #45A049;
+        }
+
+        /* ========================================
+           RESULTADOS
+           ======================================== */
+        .container-resultados {
+            background: white;
+            border-radius: var(--raio-borda);
+            box-shadow: 0 8px 24px var(--cor-sombra);
+            padding: calc(var(--espacamento-base) * 2);
+            display: none;
+            animation: slideIn 0.5s ease-in-out;
+        }
+
+        .container-resultados.ativo {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .resultados-titulo {
+            font-size: 1.5rem;
+            color: var(--cor-destaque);
+            margin-bottom: calc(var(--espacamento-base) * 1.5);
+            text-align: center;
+            padding-bottom: var(--espacamento-base);
+            border-bottom: 3px solid var(--cor-primaria);
+        }
+
+        .resultado-secao {
+            margin-bottom: calc(var(--espacamento-base) * 2);
+            padding: var(--espacamento-base);
+            background-color: #FFFEF9;
+            border-left: 4px solid var(--cor-destaque);
+            border-radius: 4px;
+        }
+
+        .resultado-secao h3 {
+            color: var(--cor-destaque);
+            margin-bottom: var(--espacamento-base);
+            font-size: 1.2rem;
+        }
+
+        .resultado-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--cor-borda);
+        }
+
+        .resultado-item:last-child {
+            border-bottom: none;
+        }
+
+        .resultado-item-label {
+            color: var(--cor-texto-claro);
+            font-weight: 500;
+        }
+
+        .resultado-item-valor {
+            font-weight: bold;
+            color: var(--cor-texto);
+            font-family: 'Courier New', monospace;
+        }
+
+        .resultado-total {
+            display: flex;
+            justify-content: space-between;
+            padding: calc(var(--espacamento-base) * 1.5);
+            background: linear-gradient(135deg, var(--cor-primaria) 0%, #FFFFF0 100%);
+            border-radius: var(--raio-borda);
+            margin-top: var(--espacamento-base);
+            border: 2px solid var(--cor-destaque);
+        }
+
+        .resultado-total-label {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--cor-texto);
+        }
+
+        .resultado-total-valor {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--cor-destaque);
+            font-family: 'Courier New', monospace;
+        }
+
+        /* ========================================
+           ALERTAS
+           ======================================== */
+        .alerta {
+            padding: var(--espacamento-base);
+            border-radius: var(--raio-borda);
+            margin-bottom: var(--espacamento-base);
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .alerta.ativo {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .alerta-erro {
+            background-color: #FFEBEE;
+            border-left: 4px solid var(--cor-erro);
+            color: #C62828;
+        }
+
+        .alerta-sucesso {
+            background-color: #E8F5E9;
+            border-left: 4px solid var(--cor-sucesso);
+            color: #2E7D32;
+        }
+
+        /* ========================================
+           RESPONSIVIDADE
+           ======================================== */
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            .campo-grupo-2,
+            .campo-grupo-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .container-botoes {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .resultado-total {
+                flex-direction: column;
+                gap: var(--espacamento-base);
+            }
+
+            .container-form,
+            .container-resultados {
+                padding: var(--espacamento-base);
+            }
+
+            fieldset {
+                padding: var(--espacamento-base);
+            }
+
+            legend {
+                width: calc(100% + calc(var(--espacamento-base) * 2));
+                margin-left: -var(--espacamento-base);
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                font-size: 13px;
+            }
+
+            header h1 {
+                font-size: 1.2rem;
+            }
+
+            header p {
+                font-size: 0.85rem;
+            }
+
+            main {
+                margin: var(--espacamento-base);
+                padding: 0;
+            }
+
+            .container-form,
+            .container-resultados {
+                border-radius: 4px;
+                padding: 0.75rem;
+            }
+
+            .resultado-item {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+
+            .resultado-total-valor {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* ========================================
+           IMPRESSÃO
+           ======================================== */
+        @media print {
+            body {
+                background: white;
+            }
+
+            header {
+                page-break-after: avoid;
+            }
+
+            .container-botoes,
+            button {
+                display: none;
+            }
+
+            .container-resultados {
+                box-shadow: none;
+                border: 1px solid var(--cor-borda);
+                page-break-inside: avoid;
+            }
+
+            fieldset {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🚌 Calculadora de Custos - Transporte Escolar</h1>
+        <p>Sistema de cálculo para rotas de transporte escolar da prefeitura</p>
+    </header>
+
+    <main>
+        <section class="container-form">
+            <article>
+                <div id="alerta" class="alerta"></div>
+
+                <form id="formulario-custos">
+                    <!-- SEÇÃO 1: INFORMAÇÕES DA ROTA -->
+                    <fieldset>
+                        <legend>📍 Informações da Rota</legend>
+                        <div class="campo-grupo campo-grupo-3">
+                            <div>
+                                <label for="nome-rota">Nome da Rota <span>*</span></label>
+                                <input type="text" id="nome-rota" name="nome-rota" placeholder="Ex: Rota Centro" required>
+                            </div>
+                            <div>
+                                <label for="km-rota">Quilometragem (km) <span>*</span></label>
+                                <input type="number" id="km-rota" name="km-rota" placeholder="0" min="0" step="0.1" required>
+                                <span class="info-texto">Distância total da rota em km</span>
+                            </div>
+                            <div>
+                                <label for="dias-operacao">Dias de Operação <span>*</span></label>
+                                <input type="number" id="dias-operacao" name="dias-operacao" value="20" min="1" max="31" required>
+                                <span class="info-texto">Dias úteis por mês</span>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- SEÇÃO 2: DADOS DO VEÍCULO -->
+                    <fieldset>
+                        <legend>🚗 Dados do Veículo</legend>
+                        <div class="campo-grupo campo-grupo-2">
+                            <div>
+                                <label for="consumo-combustivel">Consumo (km/l) <span>*</span></label>
+                                <input type="number" id="consumo-combustivel" name="consumo-combustivel" value="6" min="1" step="0.1" required>
+                                <span class="info-texto">Consumo médio de combustível</span>
+                            </div>
+                            <div>
+                                <label for="preco-combustivel">Preço do Combustível (R$/l) <span>*</span></label>
+                                <input type="number" id="preco-combustivel" name="preco-combustivel" value="6.50" min="0.01" step="0.01" required>
+                                <span class="info-texto">Preço atual por litro</span>
+                            </div>
+                        </div>
+                        <div class="campo-grupo campo-grupo-2">
+                            <div>
+                                <label for="manutencao-mensal">Manutenção Mensal (R$) <span>*</span></label>
+                                <input type="number" id="manutencao-mensal" name="manutencao-mensal" value="500" min="0" step="0.01" required>
+                                <span class="info-texto">Custos com pneus, óleo, etc</span>
+                            </div>
+                            <div>
+                                <label for="seguro-mensal">Seguro Mensal (R$) <span>*</span></label>
+                                <input type="number" id="seguro-mensal" name="seguro-mensal" value="300" min="0" step="0.01" required>
+                                <span class="info-texto">Seguro do veículo</span>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- SEÇÃO 3: CUSTOS PESSOAIS -->
+                    <fieldset>
+                        <legend>👤 Custos com Pessoal</legend>
+                        <div class="campo-grupo campo-grupo-2">
+                            <div>
+                                <label for="salario-motorista">Salário do Motorista (R$) <span>*</span></label>
+                                <input type="number" id="salario-motorista" name="salario-motorista" value="2500" min="0" step="0.01" required>
+                                <span class="info-texto">Salário mensal do motorista</span>
+                            </div>
+                            <div>
+                                <label for="encargos-pessoal">Encargos (%) <span>*</span></label>
+                                <input type="number" id="encargos-pessoal" name="encargos-pessoal" value="36.8" min="0" max="100" step="0.1" required>
+                                <span class="info-texto">INSS, FGTS e contribuições</span>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- SEÇÃO 4: CUSTOS ADICIONAIS -->
+                    <fieldset>
+                        <legend>💰 Custos Adicionais</legend>
+                        <div class="campo-grupo campo-grupo-2">
+                            <div>
+                                <label for="licenciamento">Licenciamento Anual (R$) <span>*</span></label>
+                                <input type="number" id="licenciamento" name="licenciamento" value="300" min="0" step="0.01" required>
+                                <span class="info-texto">Dividido por 12 meses</span>
+                            </div>
+                            <div>
+                                <label for="rastreamento">Rastreamento Mensal (R$) <span>*</span></label>
+                                <input type="number" id="rastreamento" name="rastreamento" value="50" min="0" step="0.01" required>
+                                <span class="info-texto">GPS e monitoramento</span>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- SEÇÃO 5: ESTUDANTES E MARGEM -->
+                    <fieldset>
+                        <legend>📚 Estudantes e Rentabilidade</legend>
+                        <div class="campo-grupo campo-grupo-2">
+                            <div>
+                                <label for="quantidade-estudantes">Quantidade de Estudantes <span>*</span></label>
+                                <input type="number" id="quantidade-estudantes" name="quantidade-estudantes" value="30" min="1" required>
+                                <span class="info-texto">Número médio de passageiros</span>
+                            </div>
+                            <div>
+                                <label for="margem-lucro">Margem de Lucro (%) <span>*</span></label>
+                                <input type="number" id="margem-lucro" name="margem-lucro" value="15" min="0" max="100" step="0.1" required>
+                                <span class="info-texto">Margem de lucro desejada</span>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- BOTÕES DE AÇÃO -->
+                    <div class="container-botoes">
+                        <button type="submit" class="btn-calcular">Calcular Custos</button>
+                        <button type="reset" class="btn-limpar">Limpar Formulário</button>
+                        <button type="button" class="btn-imprimir" onclick="imprimirResultados()">Imprimir</button>
+                    </div>
+                </form>
+            </article>
+        </section>
+
+        <!-- SEÇÃO DE RESULTADOS -->
+        <section id="resultados" class="container-resultados">
+            <article>
+                <h2 class="resultados-titulo">📊 Resultado da Análise de Custos</h2>
+
+                <!-- Custos Operacionais -->
+                <div class="resultado-secao">
+                    <h3>Custos Operacionais Mensais</h3>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Combustível:</span>
+                        <span class="resultado-item-valor" id="resultado-combustivel">R$ 0,00</span>
+                    </div>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Manutenção:</span>
+                        <span class="resultado-item-valor" id="resultado-manutencao">R$ 0,00</span>
+                    </div>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Seguro:</span>
+                        <span class="resultado-item-valor" id="resultado-seguro">R$ 0,00</span>
+                    </div>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Licenciamento (mensal):</span>
+                        <span class="resultado-item-valor" id="resultado-licenciamento">R$ 0,00</span>
+                    </div>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Rastreamento:</span>
+                        <span class="resultado-item-valor" id="resultado-rastreamento">R$ 0,00</span>
+                    </div>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label"><strong>Subtotal Veículo:</strong></span>
+                        <span class="resultado-item-valor" id="resultado-subtotal-veiculo"><strong>R$ 0,00</strong></span>
+                    </div>
+                </div>
+
+                <!-- Custos com Pessoal -->
+                <div class="resultado-secao">
+                    <h3>Custos com Pessoal Mensais</h3>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Salário Motorista:</span>
+                        <span class="resultado-item-valor" id="resultado-salario">R$ 0,00</span>
+                    </div>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Encargos:</span>
+                        <span class="resultado-item-valor" id="resultado-encargos">R$ 0,00</span>
+                    </div>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label"><strong>Subtotal Pessoal:</strong></span>
+                        <span class="resultado-item-valor" id="resultado-subtotal-pessoal"><strong>R$ 0,00</strong></span>
+                    </div>
+                </div>
+
+                <!-- Custos Totais -->
+                <div class="resultado-secao">
+                    <h3>Análise de Custos Unitários</h3>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Custo Total Mensal:</span>
+                        <span class="resultado-item-valor" id="resultado-custo-total-mensal">R$ 0,00</span>
+                    </div>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Custo por Quilômetro:</span>
+                        <span class="resultado-item-valor" id="resultado-custo-km">R$ 0,00</span>
+                    </div>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Custo por Estudante (mensal):</span>
+                        <span class="resultado-item-valor" id="resultado-custo-estudante-mensal">R$ 0,00</span>
+                    </div>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Custo por Estudante (diário):</span>
+                        <span class="resultado-item-valor" id="resultado-custo-estudante-diario">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <!-- Sugestão de Preço -->
+                <div class="resultado-total">
+                    <span class="resultado-total-label">💵 Preço Sugerido por Estudante (Mensal):</span>
+                    <span class="resultado-total-valor" id="resultado-preco-sugerido">R$ 0,00</span>
+                </div>
+
+                <!-- Informações Adicionais -->
+                <div class="resultado-secao">
+                    <h3>Informações Adicionais</h3>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Rota:</span>
+                        <span class="resultado-item-valor" id="resultado-rota-nome">-</span>
+                    </div>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Quilometragem Total (mensal):</span>
+                        <span class="resultado-item-valor" id="resultado-km-total">0 km</span>
+                    </div>
+                    <div class="resultado-item">
+                        <span class="resultado-item-label">Data do Cálculo:</span>
+                        <span class="resultado-item-valor" id="resultado-data-calculo">-</span>
+                    </div>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 - Aplicação de Cálculo de Custos de Transporte Escolar | Desenvolvido com ❤️ para a Prefeitura Municipal</p>
+    </footer>
+
+    <script>
+        // ========================================
+        // UTILITÁRIOS
+        // ========================================
+
+        /**
+         * Formata um valor numérico em Real (BRL)
+         * @param {number} valor - Valor a ser formatado
+         * @returns {string} - Valor formatado em Real
+         */
+        function formatarReal(valor) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(valor);
+        }
+
+        /**
+         * Formata a data atual em formato brasileiro
+         * @returns {string} - Data formatada
+         */
+        function formatarData() {
+            const data = new Date();
+            return new Intl.DateTimeFormat('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(data);
+        }
+
+        /**
+         * Valida se todos os campos obrigatórios foram preenchidos
+         * @returns {boolean} - True se válido, false caso contrário
+         */
+        function validarFormulario() {
+            const formulario = document.getElementById('formulario-custos');
+            
+            if (!formulario.checkValidity()) {
+                mostrarAlerta('Por favor, preencha todos os campos obrigatórios corretamente.', 'erro');
+                return false;
+            }
+
+            // Validações adicionais
+            const kmRota = parseFloat(document.getElementById('km-rota').value);
+            const quantidadeEstudantes = parseInt(document.getElementById('quantidade-estudantes').value);
+
+            if (kmRota <= 0) {
+                mostrarAlerta('A quilometragem deve ser maior que zero.', 'erro');
+                return false;
+            }
+
+            if (quantidadeEstudantes <= 0) {
+                mostrarAlerta('A quantidade de estudantes deve ser maior que zero.', 'erro');
+                return false;
+            }
+
+            return true;
+        }
+
+        /**
+         * Exibe alertas na tela
+         * @param {string} mensagem - Mensagem a exibir
+         * @param {string} tipo - Tipo de alerta ('erro' ou 'sucesso')
+         */
+        function mostrarAlerta(mensagem, tipo = 'erro') {
+            const alerta = document.getElementById('alerta');
+            alerta.textContent = mensagem;
+            alerta.className = `alerta ativo alerta-${tipo}`;
+            
+            if (tipo === 'sucesso') {
+                setTimeout(() => {
+                    alerta.classList.remove('ativo');
+                }, 5000);
+            }
+        }
+
+        /**
+         * Limpa os alertas da tela
+         */
+        function limparAlerta() {
+            const alerta = document.getElementById('alerta');
+            alerta.classList.remove('ativo');
+        }
+
+        // ========================================
+        // CÁLCULOS
+        // ========================================
+
+        /**
+         * Calcula todos os custos baseado nos dados do formulário
+         * @returns {object} - Objeto com todos os custos calculados
+         */
+        function calcularCustos() {
+            // Coleta dados do formulário
+            const nomeRota = document.getElementById('nome-rota').value;
+            const kmRota = parseFloat(document.getElementById('km-rota').value);
+            const diasOperacao = parseInt(document.getElementById('dias-operacao').value);
+            const consumoCombustivel = parseFloat(document.getElementById('consumo-combustivel').value);
+            const precoCombustivel = parseFloat(document.getElementById('preco-combustivel').value);
+            const manutencaoMensal = parseFloat(document.getElementById('manutencao-mensal').value);
+            const seguroMensal = parseFloat(document.getElementById('seguro-mensal').value);
+            const salarioMotorista = parseFloat(document.getElementById('salario-motorista').value);
+            const encargos = parseFloat(document.getElementById('encargos-pessoal').value);
+            const licenciamento = parseFloat(document.getElementById('licenciamento').value);
+            const rastreamento = parseFloat(document.getElementById('rastreamento').value);
+            const quantidadeEstudantes = parseInt(document.getElementById('quantidade-estudantes').value);
+            const margemLucro = parseFloat(document.getElementById('margem-lucro').value);
+
+            // Cálculos de custos
+            const kmTotalMensal = kmRota * diasOperacao;
+            const combustivelMensal = (kmTotalMensal / consumoCombustivel) * precoCombustivel;
+            const licenciamentoMensal = licenciamento / 12;
+            const encargosValor = (salarioMotorista * encargos) / 100;
+            const custoPessoalTotal = salarioMotorista + encargosValor;
+
+            // Custos totais
+            const custoVeiculoMensal = combustivelMensal + manutencaoMensal + seguroMensal + licenciamentoMensal + rastreamento;
+            const custoTotalMensal = custoVeiculoMensal + custoPessoalTotal;
+
+            // Custos unitários
+            const custoPorKm = custoTotalMensal / kmTotalMensal;
+            const custoPorEstudanteMensal = custoTotalMensal / quantidadeEstudantes;
+            const custoPorEstudanteDiario = custoPorEstudanteMensal / diasOperacao;
+
+            // Preço sugerido (com margem de lucro)
+            const precoSugerido = custoPorEstudanteMensal * (1 + margemLucro / 100);
+
+            return {
+                nomeRota,
+                kmRota,
+                diasOperacao,
+                kmTotalMensal,
+                combustivelMensal,
+                manutencaoMensal,
+                seguroMensal,
+                licenciamentoMensal,
+                rastreamento,
+                custoVeiculoMensal,
+                salarioMotorista,
+                encargosValor,
+                custoPessoalTotal,
+                custoTotalMensal,
+                custoPorKm,
+                custoPorEstudanteMensal,
+                custoPorEstudanteDiario,
+                quantidadeEstudantes,
+                precoSugerido,
+                margemLucro
+            };
+        }
+
+        // ========================================
+        // EXIBIÇÃO DE RESULTADOS
+        // ========================================
+
+        /**
+         * Exibe os resultados dos cálculos na tela
+         * @param {object} custos - Objeto com os custos calculados
+         */
+        function exibirResultados(custos) {
+            // Atualiza valores de custos operacionais
+            document.getElementById('resultado-combustivel').textContent = formatarReal(custos.combustivelMensal);
+            document.getElementById('resultado-manutencao').textContent = formatarReal(custos.manutencaoMensal);
+            document.getElementById('resultado-seguro').textContent = formatarReal(custos.seguroMensal);
+            document.getElementById('resultado-licenciamento').textContent = formatarReal(custos.licenciamentoMensal);
+            document.getElementById('resultado-rastreamento').textContent = formatarReal(custos.rastreamento);
+            document.getElementById('resultado-subtotal-veiculo').textContent = formatarReal(custos.custoVeiculoMensal);
+
+            // Atualiza valores de custos com pessoal
+            document.getElementById('resultado-salario').textContent = formatarReal(custos.salarioMotorista);
+            document.getElementById('resultado-encargos').textContent = formatarReal(custos.encargosValor);
+            document.getElementById('resultado-subtotal-pessoal').textContent = formatarReal(custos.custoPessoalTotal);
+
+            // Atualiza análise de custos unitários
+            document.getElementById('resultado-custo-total-mensal').textContent = formatarReal(custos.custoTotalMensal);
+            document.getElementById('resultado-custo-km').textContent = formatarReal(custos.custoPorKm);
+            document.getElementById('resultado-custo-estudante-mensal').textContent = formatarReal(custos.custoPorEstudanteMensal);
+            document.getElementById('resultado-custo-estudante-diario').textContent = formatarReal(custos.custoPorEstudanteDiario);
+
+            // Atualiza preço sugerido
+            document.getElementById('resultado-preco-sugerido').textContent = formatarReal(custos.precoSugerido);
+
+            // Atualiza informações adicionais
+            document.getElementById('resultado-rota-nome').textContent = custos.nomeRota || '-';
+            document.getElementById('resultado-km-total').textContent = custos.kmTotalMensal.toFixed(2) + ' km';
+            document.getElementById('resultado-data-calculo').textContent = formatarData();
+
+            // Exibe seção de resultados
+            document.getElementById('resultados').classList.add('ativo');
+            
+            // Scroll para resultados
+            setTimeout(() => {
+                document.getElementById('resultados').scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+
+        /**
+         * Imprime os resultados
+         */
+        function imprimirResultados() {
+            if (!document.getElementById('resultados').classList.contains('ativo')) {
+                mostrarAlerta('Por favor, calcule os custos primeiro.', 'erro');
+                return;
+            }
+            window.print();
+        }
+
+        // ========================================
+        // EVENT LISTENERS
+        // ========================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const formulario = document.getElementById('formulario-custos');
+
+            formulario.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                limparAlerta();
+
+                // Valida formulário
+                if (!validarFormulario()) {
+                    return;
+                }
+
+                try {
+                    // Calcula custos
+                    const custos = calcularCustos();
+
+                    // Exibe resultados
+                    exibirResultados(custos);
+
+                    // Mostra mensagem de sucesso
+                    mostrarAlerta('Cálculo realizado com sucesso!', 'sucesso');
+                } catch (erro) {
+                    mostrarAlerta('Erro ao calcular custos: ' + erro.message, 'erro');
+                    console.error('Erro:', erro);
+                }
+            });
+
+            // Calcula automaticamente ao mudar valores
+            const inputs = formulario.querySelectorAll('input[type="number"], select');
+            inputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    if (document.getElementById('resultados').classList.contains('ativo')) {
+                        formulario.dispatchEvent(new Event('submit'));
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
